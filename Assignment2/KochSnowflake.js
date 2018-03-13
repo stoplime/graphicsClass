@@ -15,11 +15,13 @@ window.onload = function init()
 
     // points = [ vec2( -0.866, -0.5) ];
     points = [];
-    var startDist = 0.005;
+    // var startDist = 1.7;
+    var startDist = 0.00010;
     // var turtle = new Turtle(vec2( -0.866, -0.5), 0);
     var turtle = new Turtle(vec2( 0, 0), 0);
 
     var manTurn = 60;
+    // var manTurn = 120;
     var sides = 72;
     for (var i = 0; i < sides-1; i++) {
         KochPattern(turtle, startDist, depth);
@@ -35,7 +37,8 @@ window.onload = function init()
     //  Configure WebGL
     //
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.30, 0.30, 0.30, 1.0 );
+    gl.clearColor( 0.3, 0.3, 0.3, 1.0 );
+    // gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
 
     //  Load shaders and initialize attribute buffers
 
@@ -77,6 +80,7 @@ function KochPattern(turtle, dist, depth){
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT );
+    // gl.lineWidth(2.0);
     gl.drawArrays( gl.POINTS, 0, points.length );
     gl.drawArrays( gl.LINE_STRIP, 0, points.length );
 }
