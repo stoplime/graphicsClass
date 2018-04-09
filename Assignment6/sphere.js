@@ -1,0 +1,173 @@
+"use strict";
+
+var canvas;
+var gl;
+var program;
+
+var latitudeBands = 30;
+var longitudeBands = 30;
+var radius = 2;
+
+var pointsArray = [];
+var texCoordsArray = [];
+var indexArray = [];
+
+var vBuffer;
+var tBuffer;
+var iBuffer;
+
+var vPosition;
+var vTexCoord;
+
+var modelViewMatrix, projectionMatrix;
+var modelViewMatrixLoc, projectionMatrixLoc;
+var texture, textureLoc;
+
+var up = vec3(0.0, 1.0, 0.0);
+var at = vec3(0.0, 0.0, 0.0);
+var eye = vec3(0.0, 0.0, 1.0);
+
+var near = -10;
+var far = 10;
+var left = -3.0;
+var right = 3.0;
+var ytop = 3.0;
+var bottom = -3.0;
+
+window.onload = function init() {
+    canvas = document.getElementById("gl-canvas");
+
+    gl = WebGLUtils.setupWebGL(canvas);
+    if (!gl) { alert("WebGL isn't available"); }
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+
+    gl.enable(gl.DEPTH_TEST);
+
+    //
+    //  Load shaders and initialize attribute buffers
+    //
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
+
+    createSphereMap();
+
+    // Create vertex buffer and vPosition attribute
+    vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
+    vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    // Create texture buffer and vTexCoord attribute
+    tBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW);
+    vTexCoord = gl.getAttribLocation(program, "vTexCoord");
+    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vTexCoord);
+
+    // Create index buffer
+    iBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexArray), gl.STATIC_DRAW);
+
+    // Get buffer locations for the following shader variables
+    projectionMatrixLoc = gl.getUniformLocation(program, "projectionMatrix");
+    modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
+    textureLoc = gl.getUniformLocation(program, "texture");
+
+    loadImage(document.getElementById(document.getElementById('imageVal').value));
+    
+    document.getElementById("imageVal").onchange =
+      function (event) {
+          loadImage(document.getElementById(event.target.value));
+          createSphereMap();
+      };
+
+    render();
+}
+
+// Create SphereMap by filling pointsArray, texCoordsArray, and indexArray
+function createSphereMap()
+{
+    pointsArray = [];
+    texCoordsArray = [];
+    indexArray = [];
+
+    // For each latitudinal band determine theta's value
+    for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
+        var theta = latNumber * Math.PI / latitudeBands;
+        var sinTheta = Math.sin(theta);
+        var cosTheta = Math.cos(theta);
+
+        // For each longitudinal band determine phi's value and other calculations
+        for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
+            var phi = longNumber * 2 * Math.PI / longitudeBands;
+            var sinPhi = Math.sin(phi);
+            var cosPhi = Math.cos(phi);
+
+            var x = cosPhi * sinTheta;
+            var y = cosTheta;
+            var z = sinPhi * sinTheta;
+            var u = 1 - (longNumber / longitudeBands);
+            var v = 1 - (latNumber / latitudeBands);
+
+            pointsArray.push(radius * x);
+            pointsArray.push(radius * y);
+            pointsArray.push(radius * z);
+            pointsArray.push(1.0);
+
+            texCoordsArray.push(u);
+            texCoordsArray.push(v);
+        }
+    }
+
+    // Set indices made up of rectangles rendered with 2 triangles (6 indices)
+    for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
+        for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
+            var first = (latNumber * (longitudeBands + 1)) + longNumber;
+            var second = first + longitudeBands + 1;
+
+            // First triangle
+            indexArray.push(first);
+            indexArray.push(second);
+            indexArray.push(first + 1);
+
+            // Second triangle
+            indexArray.push(second);
+            indexArray.push(second + 1);
+            indexArray.push(first + 1);
+        }
+    }
+}
+
+function loadImage(image) {
+    texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    gl.activeTexture(gl.texture);
+    gl.uniform1i(textureLoc, 0);
+}
+
+function render() {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    projectionMatrix = ortho(left, right, bottom, ytop, near, far);
+    
+    modelViewMatrix = lookAt(eye, at, up);
+    
+    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+
+    gl.drawElements(gl.TRIANGLES, indexArray.length, gl.UNSIGNED_SHORT, 0);
+
+    requestAnimFrame(render);
+}
