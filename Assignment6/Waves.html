@@ -50,10 +50,11 @@
             specular = vec4(0.0, 0.0, 0.0, 1.0);
         }
 
-        float ratio = (1.0 - vNormal.y) / 2.0;
+        float ratio = (1.0 + vNormal.z) / 2.0;
         float bandNum = floor(ratio * bandAmt);
 
-        fColor = (ambient + diffuse + specular + 0.1) - (bandNum/bandAmt * 0.4);
+        fColor = (ambient + diffuse + specular);
+        fColor = fColor + (bandNum/bandAmt) * fColor;
         fColor.a = 1.0;
     }
 </script>
@@ -73,7 +74,7 @@
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
-<script type="text/javascript" src="ToonLikeShader.js"></script>
+<script type="text/javascript" src="Waves.js"></script>
 
 <body>
     <canvas id="gl-canvas" width="512" height="512">

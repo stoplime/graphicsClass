@@ -38,8 +38,8 @@ var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0);
 var lightDiffuse = vec4(0.6, 0.6, 0.6, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
-var materialAmbient = vec4(1.0, 0.0, 1.0, 1.0);
-var materialDiffuse = vec4(1.0, 0.8, 0.0, 1.0);
+var materialAmbient = vec4(0.0, 0.1, 0.6, 1.0);
+var materialDiffuse = vec4(0.0, 0.6, 1.0, 1.0);
 var materialSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
 var ambientProduct, ambientProductLoc;
@@ -53,7 +53,7 @@ var lightPosition = [36.0, 82.0, 100.0, 0.0];
 var lightPositionLoc;
 
 // Setting the amount of bands
-var bandAmt = 10.0;
+var bandAmt = 1.0;
 var bandAmtLoc;
 
 var lightTheta = 0.35;
@@ -131,9 +131,6 @@ window.onload = function init() {
 
     specularProductLoc = gl.getUniformLocation(program, "specularProduct");
     gl.uniform4fv(specularProductLoc, flatten(specularProduct));
-
-    bandAmtLoc = gl.getUniformLocation(program, "bandAmt");
-    gl.uniform1f(bandAmtLoc, bandAmt);
 
     render();
 }
@@ -218,7 +215,14 @@ function render() {
 
     gl.drawElements(gl.TRIANGLES, indexArray.length, gl.UNSIGNED_SHORT, 0);
 
-    lightTheta -= 0.01;
+    bandAmt += 0.01;
+    if (bandAmt > 20) {
+        bandAmt -= 19.0;
+    }
+    bandAmtLoc = gl.getUniformLocation(program, "bandAmt");
+    gl.uniform1f(bandAmtLoc, bandAmt);
+
+    lightTheta -= 0.001;
     if (lightTheta < 0)
         lightTheta += 2 * Math.PI;
 
