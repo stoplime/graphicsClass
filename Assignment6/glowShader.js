@@ -10,14 +10,17 @@ var radius = 2;
 
 var pointsArray = [];
 var normalsArray = [];
+var colorsArray = [];
 var indexArray = [];
 
 var vBuffer;
 var nBuffer;
+var cBuffer;
 var iBuffer;
 
 var vPosition;
 var vNormal;
+var vColor;
 
 var modelViewMatrix, projectionMatrix;
 var modelViewMatrixLoc, projectionMatrixLoc;
@@ -32,6 +35,9 @@ var left = -3.0;
 var right = 3.0;
 var ytop = 3.0;
 var bottom = -3.0;
+
+var matColor = [0.0, 0.0, 0.0];    // black
+var glowColor = [0.8, 0.4, 0.1];   // chocolate
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -67,6 +73,16 @@ window.onload = function init() {
     vNormal = gl.getAttribLocation(program, "vNormal");
     gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vNormal);
+
+    // Creating the color buffer and attribute values
+    cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
+    vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    gl.uniform3fv(gl.getUniformLocation(program, "glowColor"), glowColor);
 
     // Create index buffer
     iBuffer = gl.createBuffer();
@@ -122,6 +138,8 @@ function createSphereMap()
             normalsArray.push(x);
             normalsArray.push(y);
             normalsArray.push(z);
+            
+            colorsArray.push(matColor);
         }
     }
 

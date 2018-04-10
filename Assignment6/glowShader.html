@@ -8,6 +8,9 @@
 
     varying vec4 fColor;
 
+    attribute vec3 vColor;
+    uniform vec3 glowColor;
+
     uniform mat4 modelViewMatrix;
     uniform mat4 projectionMatrix;
 
@@ -15,7 +18,15 @@
     void main()
     {
         gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-        fColor = vec4(vNormal.x, vNormal.y, vNormal.z, 1.0);
+        
+        float glowNorm = sqrt(vNormal.x * vNormal.x + vNormal.y * vNormal.y);
+        float glowFactor = pow(glowNorm, 4.0);
+
+        float r = glowFactor * glowColor.r + (1.0 - glowFactor) * vColor.r;
+        float g = glowFactor * glowColor.g + (1.0 - glowFactor) * vColor.g;
+        float b = glowFactor * glowColor.b + (1.0 - glowFactor) * vColor.b;
+
+        fColor = vec4(r, g, b, 1.0);
     }
 </script>
 
