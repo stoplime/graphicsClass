@@ -9,19 +9,18 @@ var longitudeBands = 30;
 var radius = 2;
 
 var pointsArray = [];
-var texCoordsArray = [];
+var normalsArray = [];
 var indexArray = [];
 
 var vBuffer;
-var tBuffer;
+var nBuffer;
 var iBuffer;
 
 var vPosition;
-var vTexCoord;
+var vNormal;
 
 var modelViewMatrix, projectionMatrix;
 var modelViewMatrixLoc, projectionMatrixLoc;
-var texture, textureLoc;
 
 var up = vec3(0.0, 1.0, 0.0);
 var at = vec3(0.0, 0.0, 0.0);
@@ -41,7 +40,7 @@ window.onload = function init() {
     if (!gl) { alert("WebGL isn't available"); }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -61,13 +60,13 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    // Create texture buffer and vTexCoord attribute
-    tBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW);
-    vTexCoord = gl.getAttribLocation(program, "vTexCoord");
-    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vTexCoord);
+    // Create texture buffer and vNormal attribute
+    nBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW);
+    vNormal = gl.getAttribLocation(program, "vNormal");
+    gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
 
     // Create index buffer
     iBuffer = gl.createBuffer();
@@ -77,24 +76,24 @@ window.onload = function init() {
     // Get buffer locations for the following shader variables
     projectionMatrixLoc = gl.getUniformLocation(program, "projectionMatrix");
     modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
-    textureLoc = gl.getUniformLocation(program, "texture");
+    // textureLoc = gl.getUniformLocation(program, "texture");
 
-    loadImage(document.getElementById(document.getElementById('imageVal').value));
+    // loadImage(document.getElementById(document.getElementById('imageVal').value));
     
-    document.getElementById("imageVal").onchange =
-      function (event) {
-          loadImage(document.getElementById(event.target.value));
-          createSphereMap();
-      };
+    // document.getElementById("imageVal").onchange =
+    //   function (event) {
+    //       loadImage(document.getElementById(event.target.value));
+    //       createSphereMap();
+    //   };
 
     render();
 }
 
-// Create SphereMap by filling pointsArray, texCoordsArray, and indexArray
+// Create SphereMap by filling pointsArray, normalsArray, and indexArray
 function createSphereMap()
 {
     pointsArray = [];
-    texCoordsArray = [];
+    normalsArray = [];
     indexArray = [];
 
     // For each latitudinal band determine theta's value
@@ -120,8 +119,9 @@ function createSphereMap()
             pointsArray.push(radius * z);
             pointsArray.push(1.0);
 
-            texCoordsArray.push(u);
-            texCoordsArray.push(v);
+            normalsArray.push(x);
+            normalsArray.push(y);
+            normalsArray.push(z);
         }
     }
 
@@ -144,18 +144,18 @@ function createSphereMap()
     }
 }
 
-function loadImage(image) {
-    texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-    gl.generateMipmap(gl.TEXTURE_2D);
+// function loadImage(image) {
+//     texture = gl.createTexture();
+//     gl.bindTexture(gl.TEXTURE_2D, texture);
+//     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+//     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+//     gl.generateMipmap(gl.TEXTURE_2D);
 
-    gl.activeTexture(gl.texture);
-    gl.uniform1i(textureLoc, 0);
-}
+//     gl.activeTexture(gl.texture);
+//     gl.uniform1i(textureLoc, 0);
+// }
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

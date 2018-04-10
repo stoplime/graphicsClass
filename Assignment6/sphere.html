@@ -4,17 +4,18 @@
 <script id="vertex-shader" type="x-shader/x-vertex">
 
     attribute vec4 vPosition;
-    attribute vec2 vTexCoord;
+    attribute vec3 vNormal;
+
+    varying vec4 fColor;
 
     uniform mat4 modelViewMatrix;
     uniform mat4 projectionMatrix;
 
-    varying vec2 fTexCoord;
 
     void main()
     {
         gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-        fTexCoord = vTexCoord;
+        fColor = vec4(vNormal.x, vNormal.y, vNormal.z, 1.0);
     }
 </script>
 
@@ -22,13 +23,11 @@
 
     precision mediump float;
 
-    varying vec2 fTexCoord;
-
-    uniform sampler2D texture;
+    varying vec4 fColor;
 
     void main()
     {
-        gl_FragColor = texture2D(texture, fTexCoord);
+        gl_FragColor = fColor;
     }
 </script>
 
@@ -41,7 +40,7 @@
     <canvas id="gl-canvas" width="512" height="512">
         Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
-    <br />
+    <!-- <br />
 
     <select id="imageVal" size="2">
         <option value="moonImage" selected="selected">Moon</option>
@@ -49,7 +48,7 @@
     </select>
 
     <img id="earthImage" src="earth.png" hidden />
-    <img id="moonImage" src="moon.png" hidden />
+    <img id="moonImage" src="moon.png" hidden /> -->
 
 </body>
 </html>
