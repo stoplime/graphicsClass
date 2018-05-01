@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8"/>
+<button id = "ButtonX">Rotate X</button>
+<button id = "ButtonY">Rotate Y</button>
+<button id = "ButtonZ">Rotate Z</button>
+<button id = "ButtonT">Toggle Rotation</button>
+
+<img id="image1" src="images/1.jpg" hidden />
+<img id="image2" src="images/2.jpg" hidden />
+<img id="image3" src="images/3.jpg" hidden />
+<img id="image4" src="images/4.jpg" hidden />
+<img id="image5" src="images/5.jpg" hidden />
+<img id="image6" src="images/6.jpg" hidden />
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+varying vec3 R;
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
+
+void main()
+{
+    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+     
+    //vec3 eyePos  = normalize((modelViewMatrix*vPosition).xyz);
+    vec3 eyePos  = (modelViewMatrix*vPosition).xyz;
+
+    vec3 N = normalize(normalMatrix*vNormal.xyz);
+    //vec3 N = normalMatrix*vNormal.xyz;
+    
+    R = reflect(eyePos, N);
+   
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec3 R;
+uniform samplerCube texMap;
+
+void main()
+{
+    vec4 texColor = textureCube(texMap, R);
+
+    gl_FragColor = texColor;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="reflectionMap.js"></script>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+</body>
+</html>
